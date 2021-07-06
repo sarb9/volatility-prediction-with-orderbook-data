@@ -12,6 +12,10 @@ matplotlib = "*"
 pytest = "*"
 black = "*"
 tqdm = "*"
+ipython = "*"
+pdbpp = "*"
+attrs = "*"
+tensorflow = "*"
 
 [dev-packages]
 
