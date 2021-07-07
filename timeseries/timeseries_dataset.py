@@ -1,68 +1,83 @@
-import pdb
 import typing
 from dataclasses import dataclass
 
 import numpy as np
-from numpy.core.fromnumeric import shape
 
-from settings import TIMESERIES_FEATURE_EXTRACTION_FEATURES
+from timeseries.features.feature import get_registered_features, Feature
 
-# TODO: remove the line below
-from timeseries.feature_extractors.features import Feature, feature_map
+KEYWORD_FEATURE_FUNCTION = "function"
+KEYWORD_FEATURE_NAME = "name"
+KEYWORD_FEATURE_INPUTS = "inputs"
+KEYWORD_FEATURE_ARGS = "args"
 
 
 class TimeseriesDataset:
     @dataclass
     class FeatureInfo:
         name: str
+        function: str
         slice: slice
         shape: typing.Tuple
 
     def __init__(self) -> None:
         self.data = np.zeros((0, 0))
 
-        self.feature_info_map: typing.Dict[str, TimeseriesDataset.FeatureInfo] = {}
+        self.registered_features: typing.Dict[str, Feature] = get_registered_features()
+
+        self.features_info: typing.Dict[str, TimeseriesDataset.FeatureInfo] = {}
 
     def add_features(
         self,
-        feature_names: typing.List = TIMESERIES_FEATURE_EXTRACTION_FEATURES,
+        features: typing.List[typing.Dict],
     ) -> None:
-        for feature_name in feature_names:
-            global feature_map
-            if feature_name not in feature_map.keys():
-                raise Exception(
-                    f"Feature {feature_name} has not been defined but it is listed in feature_names {feature_names}."
-                )
-            feature: Feature = feature_map[feature_name]
+        for feature in features:
 
-            inputs: typing.List[np.ndarray] = []
-            for input_name in feature.inputs:
-                if input_name not in self.feature_info_map:
+            feature_function_name: str = feature[KEYWORD_FEATURE_FUNCTION]
+            if feature_function_name not in self.registered_features.keys():
+                raise Exception(
+                    f"Feature function {feature_function_name} is not registered. Registered features: {self.registered_features}"
+                )
+            feature_func: Feature = self.registered_features[feature_function_name]
+
+            inputs_args: typing.List[np.ndarray] = []
+            for input_position, input_name in enumerate(
+                feature[KEYWORD_FEATURE_INPUTS]
+            ):
+                if input_name not in self.features_info:
                     raise Exception(
-                        f"Feature {input_name} wanted by feature {feature_name} but it has not yet added to features {self.feature_info_map}."
+                        f"Feature {input_name} is required by {feature[KEYWORD_FEATURE_NAME]} but it has not been added."
                     )
-                input_info: TimeseriesDataset.FeatureInfo = self.feature_info_map[
+                input_info: TimeseriesDataset.FeatureInfo = self.features_info[
                     input_name
                 ]
-                input_array: np.ndarray = self.data[:, input_info.slice].reshape(
+
+                if input_info.function != feature_func.input_functions[input_position]:
+                    raise Exception(
+                        f"""Feature {feature}'s {input_position} which is {input_name},
+                        is of type of {input_info.function}, but it has to be of type
+                        {feature_func.input_functions[input_position]}"""
+                    )
+
+                input_arg: np.ndarray = self.data[:, input_info.slice].reshape(
                     input_info.shape
                 )
 
-                inputs.append(input_array)
+                inputs_args.append(input_arg)
 
-            columns: np.ndarray = feature.function(*inputs)
+            columns: np.ndarray = feature_func.function(
+                *inputs_args, **feature.get(KEYWORD_FEATURE_ARGS, {})
+            )
             actual_shape: np.shape = columns.shape
             columns = columns.reshape(columns.shape[0], -1)
-
             slice_start, slice_end = self.add_columns(columns)
 
             feature_info: TimeseriesDataset.FeatureInfo = TimeseriesDataset.FeatureInfo(
-                name=feature_name,
+                name=feature[KEYWORD_FEATURE_NAME],
+                function=feature[KEYWORD_FEATURE_FUNCTION],
                 slice=slice(slice_start, slice_end),
                 shape=actual_shape,
             )
-
-            self.feature_info_map[feature_name] = feature_info
+            self.features_info[feature[KEYWORD_FEATURE_NAME]] = feature_info
 
     def add_columns(self, columns: np.array) -> typing.Tuple[int, int]:
         if not self.data.size:
@@ -86,7 +101,7 @@ class TimeseriesDataset:
     def numpy_array(self, features: typing.List[str]) -> np.ndarray:
         return np.hstack(
             [
-                self.data[:, self.feature_info_map[feature_name].slice]
+                self.data[:, self.features_info[feature_name].slice]
                 for feature_name in features
             ]
         )

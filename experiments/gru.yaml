@@ -1,0 +1,62 @@
+features:
+  -
+    name: orderbook
+    function: orderbook
+    args:
+      dataset_file: {
+        directory: "Data/",
+        file_name: "ETHUSDT.json"
+      }
+    inputs: []
+  -
+    name: mid_price
+    function: mid_price
+    inputs:
+      - orderbook
+  -
+    name: price_change
+    function: price_change
+    inputs:
+      - mid_price
+  -
+    name: bid_volume
+    function: bid_volume
+    inputs:
+      - orderbook
+  -
+    name: ask_volume
+    function: ask_volume
+    inputs:
+      - orderbook
+  -
+    name: spread
+    function: spread
+    inputs:
+      - orderbook
+      - mid_price
+  -
+    name: volatility_60
+    function: volatility
+    inputs:
+      - price_change
+    args:
+      window: 60
+  -
+    name: volatility_30
+    function: volatility
+    inputs:
+      - price_change
+    args:
+      window: 30
+  -
+    name: volatility_10
+    function: volatility
+    inputs:
+      - price_change
+    args:
+      window: 10
+
+model:
+  -
+    name: gru
+    epochs: 10

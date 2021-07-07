@@ -16,6 +16,7 @@ ipython = "*"
 pdbpp = "*"
 attrs = "*"
 tensorflow = "*"
+pyyaml = "*"
 
 [dev-packages]
 

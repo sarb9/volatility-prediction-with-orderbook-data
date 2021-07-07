@@ -6,8 +6,6 @@ from timeseries.timeseries_dataset import TimeseriesDataset
 from data_service.orderbook_dataset import OrderbookDataset
 from timeseries.feature_extractors.features import register_feature
 
-from tests.data_service.test_orderbook_dataset import orderbook_dataset_file_100
-
 
 @pytest.fixture
 def timeseries_dataset():
@@ -47,7 +45,7 @@ def dummy_orderbook(
 
 def test_read_orderbook(
     timeseries_dataset: TimeseriesDataset,
-    dummy_orderbook,
+    dummy_orderbook: None,
 ):
 
     timeseries_dataset.add_features(["orderbook"])
@@ -133,7 +131,7 @@ def test_timeseries_with_orderbook_spread_and_bid_ask_volume(
     from timeseries.feature_extractors.orderbook_features import (
         extract_spread,
         extract_bid_volume,
-        extract_sell_volume,
+        extract_ask_volume,
     )
 
     # TODO: This line override orderbook key in feature map... has to be removed.
@@ -146,7 +144,7 @@ def test_timeseries_with_orderbook_spread_and_bid_ask_volume(
             "mid_price",
             "spread",
             "bid_volume",
-            "sell_volume",
+            "ask_volume",
         ]
     )
 

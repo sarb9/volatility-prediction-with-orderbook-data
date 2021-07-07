@@ -6,7 +6,7 @@ from data_service.orderbook_dataset import OrderbookDataset
 from tests.settings import DATASET_RAW_DATA_DIRECTORY_TEST, DATASET_RAW_DATA_FILE_100
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def orderbook_dataset_file_100():
     orderbook_dataset: OrderbookDataset = OrderbookDataset()
     file_path: Path = Path(DATASET_RAW_DATA_DIRECTORY_TEST) / DATASET_RAW_DATA_FILE_100

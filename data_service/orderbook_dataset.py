@@ -1,7 +1,6 @@
 from pathlib import Path
 import numpy as np
 
-from settings import DATASET_RAW_DATA_DIRECTORY, DATASET_RAW_DATA_FILE
 from data_service.file_utils.raw_dataset import load_from_file
 
 
@@ -17,6 +16,6 @@ class OrderbookDataset:
 
     def load_from_file(
         self,
-        file: Path = Path(DATASET_RAW_DATA_DIRECTORY) / DATASET_RAW_DATA_FILE,
+        file: Path,
     ):
         self.books, self._len = load_from_file(file)
