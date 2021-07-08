@@ -5,7 +5,7 @@ features:
     args:
       dataset_file: {
         directory: "Data/",
-        file_name: "ETHUSDT.json"
+        file_name: "ETHUSDT_1Y.json"
       }
     inputs: []
   -

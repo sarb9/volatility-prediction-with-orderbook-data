@@ -2,12 +2,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-class GruModel:
+from prediction_models.model import PredictionModel
+from timeseries.timeseries_dataset import TimeseriesDataset
+from prediction_models.nn.labeled_dataset import LabeledDataset
 
-    checkpoint_path = MODEL_CHECKPOINT_DIRECTORY + MODEL_CHECKPOINT_FILE_FORMAT
 
-    def __init__(self, dataset, load=False) -> None:
-        self.dataset = dataset
+class GruModel(PredictionModel):
+    name = "gru"
+
+    def __init__(
+        self,
+        features: TimeseriesDataset,
+        target: TimeseriesDataset,
+        load=False,
+    ) -> None:
+
+        self.dataset: LabeledDataset = LabeledDataset(
+            features=features,
+            target=target,
+            input_width=60,
+            label_width=1,
+            shift=1,
+            train_portion=0.8,
+            validation_portion=0.1,
+            test_portion=0.1,
+        )
 
         self.tfmodel = tf.keras.models.Sequential(
             [
@@ -21,7 +40,7 @@ class GruModel:
         if load:
             self.load_model()
 
-    def fit(self, patience=2):
+    def fit(self, epochs=None, patience=None) -> None:
         early_stopping = tf.keras.callbacks.EarlyStopping(
             monitor="val_loss", patience=patience, mode="min"
         )
@@ -37,7 +56,7 @@ class GruModel:
 
         history = self.tfmodel.fit(
             self.dataset.train,
-            epochs=TRAIN_MAX_EPOCH,
+            epochs=epochs,
             validation_data=self.dataset.val,
             callbacks=[
                 early_stopping,
@@ -45,24 +64,7 @@ class GruModel:
         )
         return history
 
-    @classmethod
-    def feature_columns(self):
-        return (
-            bucket_book.BucketBookExtractor.features()
-            + price_change.PriceChangeExtractor.features()
-            + spread.SpreadExtractor.features()
-            + volatility.VolatilityExtractor.features()
-            + volume.AskVolumeExtractor.features()
-            + volume.BidVolumeExtractor.features()
-            + volume.VolumeDifferenceExtractor.features()
-            + activity.ActivityExtractor.features()
-        )
-
-    @classmethod
-    def label_column(self):
-        return volatility.VolatilityExtractor.features()[0]
-
-    def __call__(self, input):
+    def predict(self, features, **kwargs) -> np.ndarray:
         return self.tfmodel(input).numpy().flatten()
 
     def save_model(self):
@@ -76,7 +78,8 @@ class GruModel:
 
     def plot_prediction_series(self, subplots=3, length=100):
         predictions = [0] * 60
-        volatilities = self.dataset.val_data_frame[self.dataset.label_column]
+        # volatilities = self.dataset.val_data_frame[self.dataset.label_column]
+        volatilities = self.dataset.val_data_frame[:, 0]
 
         for element in self.dataset.plot_data.as_numpy_iterator():
             input, label = element
@@ -87,18 +90,21 @@ class GruModel:
         start = 0
         for n in range(subplots):
             plt.subplot(3, 1, n + 1)
-            plt.ylabel(f"{self.dataset.label_column} [normed]")
+            plt.ylabel("volatility [normed]")
+
+            end = min(len(predictions), min(len(volatilities), start + length))
+            lenn = end - start
 
             plt.plot(
-                range(length),
-                predictions[start : start + length],
+                range(lenn),
+                predictions[start:end],
                 label="predictions",
                 zorder=-10,
             )
 
             plt.plot(
-                range(length),
-                volatilities[start : start + length],
+                range(lenn),
+                volatilities[start:end],
                 label="target",
                 c="#ff7f0e",
             )

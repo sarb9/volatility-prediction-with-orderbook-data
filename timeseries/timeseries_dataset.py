@@ -1,5 +1,6 @@
 import typing
 from dataclasses import dataclass
+import functools
 
 import numpy as np
 
@@ -19,10 +20,12 @@ class TimeseriesDataset:
         slice: slice
         shape: typing.Tuple
 
-    def __init__(self) -> None:
-        self.data = np.zeros((0, 0))
+    @functools.cached_property
+    def registered_features(self) -> typing.Dict[str, Feature]:
+        return get_registered_features()
 
-        self.registered_features: typing.Dict[str, Feature] = get_registered_features()
+    def __init__(self, data=np.zeros((0, 0))) -> None:
+        self.data = data
 
         self.features_info: typing.Dict[str, TimeseriesDataset.FeatureInfo] = {}
 
@@ -98,13 +101,25 @@ class TimeseriesDataset:
 
         return slice_start, self.data.shape[1]
 
-    def numpy_array(self, features: typing.List[str]) -> np.ndarray:
+    def numpy_array(self, features: typing.List[str] = None) -> np.ndarray:
+        if not features:
+            return self.data
         return np.hstack(
             [
                 self.data[:, self.features_info[feature_name].slice]
                 for feature_name in features
             ]
         )
+
+    def new_timeseries(self, features: typing.List[str]) -> typing.Any:
+        data: np.ndarray = self.numpy_array(features)
+        timeseries_dataset: TimeseriesDataset = TimeseriesDataset(data=data)
+        timeseries_dataset.features_info = {
+            name: feature
+            for name, feature in self.features_info.items()
+            if name in features
+        }
+        return timeseries_dataset
 
     def __len__(self):
         return self.data.shape[0]

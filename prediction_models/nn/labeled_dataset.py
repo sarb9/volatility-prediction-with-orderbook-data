@@ -1,7 +1,9 @@
 from typing import Dict, List
+from h5py._hl import dataset
 
 import tensorflow as tf
 import numpy as np
+from tensorflow.python.data.ops.dataset_ops import _NumpyIterator
 
 from timeseries.timeseries_dataset import TimeseriesDataset
 
@@ -9,9 +11,8 @@ from timeseries.timeseries_dataset import TimeseriesDataset
 class LabeledDataset:
     def __init__(
         self,
-        timeseries_dataset: TimeseriesDataset,
-        features: List[str],
-        label: str,
+        features: TimeseriesDataset,
+        target: TimeseriesDataset,
         input_width: int,
         label_width: int,
         shift: int,
@@ -20,14 +21,16 @@ class LabeledDataset:
         test_portion: float,
     ) -> None:
 
-        self.timeseries_dataset: TimeseriesDataset = timeseries_dataset
-
-        self.features: List[str] = features
-        self.label: str = label
-
-        self.dataset: np.ndarray = self.timeseries_dataset.numpy_array(
-            [self.label] + self.features,
+        self.dataset: np.ndarray = np.hstack(
+            (target.numpy_array(), features.numpy_array())
         )
+        # Normalize
+        import pdb
+
+        mean = np.mean(self.dataset, axis=(0))
+        std = np.std(self.dataset, axis=(0))
+        self.dataset = (self.dataset - mean) / std
+        pdb.set_trace()
 
         self.input_width: int = input_width
         self.label_width: int = label_width
@@ -74,7 +77,6 @@ class LabeledDataset:
         return inputs, labels
 
     def create_tensorflow_dataset(self, data, stride=1, batch_size=64):
-        data: np.ndarray = np.array(data, dtype=np.float32)
         dataset: np.ndarray = tf.keras.preprocessing.timeseries_dataset_from_array(
             data=data,
             targets=None,
