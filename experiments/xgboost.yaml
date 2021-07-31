@@ -1,0 +1,37 @@
+features:
+  -
+    name: orderbook
+    function: orderbook
+    args:
+      dataset_file: {
+        directory: "Data/",
+        file_name: "ETHUSDT.json"
+      }
+    inputs: []
+  -
+    name: mid_price
+    function: mid_price
+    inputs:
+      - orderbook
+  -
+    name: price_change
+    function: price_change
+    inputs:
+      - mid_price
+  -
+    name: volatility_60
+    function: volatility
+    inputs:
+      - price_change
+    args:
+      window: 60
+
+models:
+  -
+    name: boost
+    model: xgboost
+    features:
+      - volatility_60
+    target: volatility_60
+    construction_args: {}
+    fit_args: {}

@@ -17,6 +17,13 @@ pdbpp = "*"
 attrs = "*"
 tensorflow = "*"
 pyyaml = "*"
+seaborn = "*"
+arch = "*"
+pandas-datareader = "*"
+scikit-learn = "*"
+xgboost = "*"
+nb-black = "*"
+neuralprophet = "*"
 
 [dev-packages]
 
