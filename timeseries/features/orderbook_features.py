@@ -6,10 +6,14 @@ from timeseries.features.feature import register_feature
 
 
 @register_feature("orderbook")
-def read_orderbook_from_file(dataset_file: Dict = {}):
+def read_orderbook_from_file(
+    dataset_file: Dict = {},
+    save: Dict = {},
+    load: Dict = {},
+):
     path: Path = Path(dataset_file["directory"]) / dataset_file["file_name"]
     dataset: OrderbookDataset = OrderbookDataset()
-    dataset.load_from_file(path)
+    dataset.load_from_file(path, save=save, load=load)
 
     return dataset.books
 

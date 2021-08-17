@@ -7,6 +7,14 @@ features:
         directory: "Data/",
         file_name: "ETHUSDT_1Y.json"
       }
+      load: {
+        directory: "Data/",
+        file_name: "ETHUSDT_1Y.npy"
+      }
+      save: {
+        directory: "Data/",
+        file_name: "ETHUSDT_1Y.npy"
+      }
     inputs: []
   -
     name: mid_price
