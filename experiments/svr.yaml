@@ -28,10 +28,14 @@ features:
 
 models:
   -
-    name: garch
-    model: basic-garch
+    name: svr
+    model: svr
     features:
       - volatility_60
     target: volatility_60
     construction_args: {}
     fit_args: {}
+
+hyper-parameters:
+  training-split: 0.8
+  testing-split: 0.1

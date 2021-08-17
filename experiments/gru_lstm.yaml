@@ -79,6 +79,28 @@ models:
     fit_args:
       epochs: 10
       patience: 2
+  -
+    name: lstm
+    model: lstm
+    features:
+      - mid_price
+      - price_change
+      - volatility_60
+      - volatility_30
+      - volatility_10
+      - ask_volume
+      - bid_volume
+    target: volatility_60
+    construction_args:
+      load: False
+      input_width: 60
+      label_width: 1
+      shift: 1
+      train_portion: 0.85
+      validation_portion: 0.15
+    fit_args:
+      epochs: 10
+      patience: 2
 
 hyper-parameters:
   training-split: 0.8

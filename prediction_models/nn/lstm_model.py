@@ -9,8 +9,8 @@ from prediction_models.nn.labeled_dataset import LabeledDataset
 KEYWORD_SAVE_MODEL_DIRECTORY = "directory"
 
 
-class GruModel(PredictionModel):
-    name = "gru"
+class LstmModel(PredictionModel):
+    name = "lstm"
 
     def __init__(
         self,
@@ -37,24 +37,21 @@ class GruModel(PredictionModel):
             validation_portion=validation_portion,
             test_portion=0.0,
         )
+
         if load_model:
             self.tfmodel = tf.keras.models.load_model(
                 load_model[KEYWORD_SAVE_MODEL_DIRECTORY] + self.name
             )
             self.train = False
-            import pdb
-
-            pdb.set_trace()
         else:
             self.tfmodel = tf.keras.models.Sequential(
                 [
                     # Shape [batch, time, features] => [batch, time, lstm_units]
-                    tf.keras.layers.GRU(128, return_sequences=False),
+                    tf.keras.layers.LSTM(128, return_sequences=False),
                     # Shape => [batch, time, features]
                     tf.keras.layers.Dense(units=1),
                 ]
             )
-            self.train = True
 
     def fit(
         self,
@@ -154,6 +151,3 @@ class GruModel(PredictionModel):
 
         plt.xlabel("Time [h]")
         plt.show()
-
-    def save_model(self):
-        self.tfmodel.save(self.checkpoint_path)

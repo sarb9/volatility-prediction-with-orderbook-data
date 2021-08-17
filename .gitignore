@@ -131,3 +131,4 @@ dmypy.json
 # My Files
 data
 .vscode
+fitted_models/

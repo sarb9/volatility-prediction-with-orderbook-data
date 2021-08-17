@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from prediction_models.model import PredictionModel
 from timeseries.timeseries_dataset import TimeseriesDataset
 
+
 class XgBoost(PredictionModel):
     name = "xgboost"
 
@@ -25,13 +26,17 @@ class XgBoost(PredictionModel):
         self.normalize_data()
 
     def normalize_data(self):
-        self.train_data = (self.train_data - np.mean(self.train_data)) / np.std(self.train_data)
-        self.target_series = (self.target_series - np.mean(self.target_series)) / np.std(self.target_series)
+        self.train_data = (self.train_data - np.mean(self.train_data)) / np.std(
+            self.train_data
+        )
+        self.target_series = (
+            self.target_series - np.mean(self.target_series)
+        ) / np.std(self.target_series)
 
     def fit(self, epochs=None, patience=None) -> None:
         print("fitting")
 
-    def xgb_predict(self, train, target,val):
+    def xgb_predict(self, train, target, val):
         model = XGBRegressor(objective="reg:squarederror", n_estimators=1000)
         model.fit(train, target)
 
@@ -44,17 +49,16 @@ class XgBoost(PredictionModel):
         train = self.train_data[:-1].reshape(-1, 1)
         target = self.target_series[1:]
 
-        for i in range(self.train_size ,target.shape[0]):
+        for i in range(self.train_size, target.shape[0]):
             print(i)
 
             pred = self.xgb_predict(train[:i, :], target[:i], train[i])
 
             predictions.append(pred)
 
-        import pdb; pdb.set_trace()
         error = mean_squared_error(test[:, -1], predictions, squared=False)
 
         return error, test[:, -1], predictions
 
     def predict(self, features, **kwargs) -> np.ndarray:
-        return np.zeros((1,1))
+        return np.zeros((1, 1))

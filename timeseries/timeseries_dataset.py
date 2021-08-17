@@ -24,10 +24,10 @@ class TimeseriesDataset:
     def registered_features(self) -> typing.Dict[str, Feature]:
         return get_registered_features()
 
-    def __init__(self, data=np.zeros((0, 0))) -> None:
+    def __init__(self, data=np.zeros((0, 0)), features_info={}) -> None:
         self.data = data
 
-        self.features_info: typing.Dict[str, TimeseriesDataset.FeatureInfo] = {}
+        self.features_info: typing.Dict[str, TimeseriesDataset.FeatureInfo] = features_info
 
     def add_features(
         self,
@@ -111,14 +111,19 @@ class TimeseriesDataset:
             ]
         )
 
-    def new_timeseries(self, features: typing.List[str]) -> typing.Any:
+    def new_timeseries(self, features: typing.List[str] = None, split_data: typing.Tuple[int, int] = None,) -> typing.Any:
         data: np.ndarray = self.numpy_array(features)
-        timeseries_dataset: TimeseriesDataset = TimeseriesDataset(data=data)
-        timeseries_dataset.features_info = {
-            name: feature
-            for name, feature in self.features_info.items()
-            if name in features
-        }
+        if split_data:
+            data: np.ndarray = data[split_data[0] : split_data[1], ...]
+
+        features_info = self.features_info
+        if features:
+            features_info = {
+                name: feature
+                for name, feature in self.features_info.items()
+                if name in features
+            }
+        timeseries_dataset: TimeseriesDataset = TimeseriesDataset(data=data, features_info=features_info)
         return timeseries_dataset
 
     def __len__(self):

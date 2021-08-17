@@ -24,6 +24,8 @@ scikit-learn = "*"
 xgboost = "*"
 nb-black = "*"
 neuralprophet = "*"
+h5py = "*"
+watchdog = "*"
 
 [dev-packages]
 

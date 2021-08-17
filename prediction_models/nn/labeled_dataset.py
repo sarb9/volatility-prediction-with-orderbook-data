@@ -1,9 +1,7 @@
 from typing import Dict, List
-from h5py._hl import dataset
 
 import tensorflow as tf
 import numpy as np
-from tensorflow.python.data.ops.dataset_ops import _NumpyIterator
 
 from timeseries.timeseries_dataset import TimeseriesDataset
 
@@ -24,13 +22,7 @@ class LabeledDataset:
         self.dataset: np.ndarray = np.hstack(
             (target.numpy_array(), features.numpy_array())
         )
-        # Normalize
-        import pdb
-
-        mean = np.mean(self.dataset, axis=(0))
-        std = np.std(self.dataset, axis=(0))
-        self.dataset = (self.dataset - mean) / std
-        pdb.set_trace()
+        self.normalize()
 
         self.input_width: int = input_width
         self.label_width: int = label_width
@@ -64,6 +56,11 @@ class LabeledDataset:
         self.label_start: int = self.total_window_size - self.label_width
         self.labels_slice: slice = slice(self.label_start, None)
         self.label_indices: np.ndarray = window[self.labels_slice]
+
+    def normalize(self, mean = None, std = None) -> None:
+        mean = np.mean(self.dataset, axis=(0)) if mean == None else mean
+        std = np.std(self.dataset, axis=(0)) if std == None else std
+        self.dataset = (self.dataset - mean) / std
 
     def split_window(self, features):
         inputs = features[:, self.input_slice, :]
@@ -100,11 +97,12 @@ class LabeledDataset:
 
     @property
     def test(self):
-        return self.create_tensorflow_dataset(self.test_data_frame, stride=60)
+        # return self.create_tensorflow_dataset(self.test_data_frame, stride=60)
+        return self.create_tensorflow_dataset(self.test_data_frame)
 
     @property
-    def plot_data(self):
-        data = np.array(self.val_data_frame, dtype=np.float32)
+    def test_without_shuffle(self):
+        data = np.array(self.test_data_frame, dtype=np.float32)
 
         dataset = tf.keras.preprocessing.timeseries_dataset_from_array(
             data=data,
