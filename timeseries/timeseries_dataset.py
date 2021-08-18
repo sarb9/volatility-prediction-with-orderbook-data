@@ -20,14 +20,17 @@ class TimeseriesDataset:
         slice: slice
         shape: typing.Tuple
 
-    @functools.cached_property
+    @property
+    @functools.lru_cache(maxsize=1)
     def registered_features(self) -> typing.Dict[str, Feature]:
         return get_registered_features()
 
     def __init__(self, data=np.zeros((0, 0)), features_info={}) -> None:
         self.data = data
 
-        self.features_info: typing.Dict[str, TimeseriesDataset.FeatureInfo] = features_info
+        self.features_info: typing.Dict[
+            str, TimeseriesDataset.FeatureInfo
+        ] = features_info
 
     def add_features(
         self,
@@ -111,7 +114,11 @@ class TimeseriesDataset:
             ]
         )
 
-    def new_timeseries(self, features: typing.List[str] = None, split_data: typing.Tuple[int, int] = None,) -> typing.Any:
+    def new_timeseries(
+        self,
+        features: typing.List[str] = None,
+        split_data: typing.Tuple[int, int] = None,
+    ) -> typing.Any:
         data: np.ndarray = self.numpy_array(features)
         if split_data:
             data: np.ndarray = data[split_data[0] : split_data[1], ...]
@@ -123,7 +130,9 @@ class TimeseriesDataset:
                 for name, feature in self.features_info.items()
                 if name in features
             }
-        timeseries_dataset: TimeseriesDataset = TimeseriesDataset(data=data, features_info=features_info)
+        timeseries_dataset: TimeseriesDataset = TimeseriesDataset(
+            data=data, features_info=features_info
+        )
         return timeseries_dataset
 
     def __len__(self):
